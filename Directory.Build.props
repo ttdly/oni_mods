@@ -21,10 +21,10 @@
   
   <ItemGroup>
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.43" Private="True" PrivateAssets="all"/>
-    <ProjectReference Include="..\GlobalUtil\GlobalUtil.csproj" Condition="'$(AssemblyTitle)' != 'GlobalUtil'" />
+    <ProjectReference Include="..\GlobalUtil\GlobalUtil.csproj" Condition="'$(AssemblyTitle)' != 'GlobalUtil'"/>
   </ItemGroup>
   
-<!--  game versions-->
+  <!--  game versions-->
   <PropertyGroup>
     <March25Qof>659901</March25Qof>
     <DLC4>674504</DLC4>

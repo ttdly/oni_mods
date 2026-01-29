@@ -15,6 +15,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WIP", "WIP", "{01538423-399
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cancelled", "Cancelled", "{77DD2E4F-C472-4939-8D93-D442EE59620F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Manage", "Manage", "{9FA3D6BD-1EC1-3BA5-80CB-CE02773A58D5}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,10 +45,10 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {03069EE2-46E8-4A94-997A-5CC4FABEFCD1}
-	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8246E63A-12A5-4D50-A0AE-0D577ED46B51} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {03069EE2-46E8-4A94-997A-5CC4FABEFCD1}
 	EndGlobalSection
 EndGlobal

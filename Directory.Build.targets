@@ -42,6 +42,7 @@
     </ItemGroup>
     
     <ILRepack
+      Condition="'@(InputAssemblies)' != ''" 
       TargetPlatformVersion="v4"
       TargetKind="SameAsPrimaryAssembly"
       OutputFile="$(TargetPath)"

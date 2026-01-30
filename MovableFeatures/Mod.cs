@@ -15,7 +15,7 @@ namespace MovableFeatures
             HarmonyInstance = harmony;
             CLog.Init("【位移信标|MovableFeatures】");
             CreateTranslationTemplate();
-            RegisterPatches();
+            PatchRegistry.RegisterPatches();
         }
 
         private static void CreateTranslationTemplate()
@@ -26,12 +26,7 @@ namespace MovableFeatures
 #endif
         }
 
-        private static void RegisterPatches()
-        {
-            PatchRegistry.Registry<HeadquartersConfig>(PatchRegistry.GameObjectType.Building, false);
-            PatchRegistry.Registry<GravitasContainerConfig>(PatchRegistry.GameObjectType.Building);
-            CLog.Info(PatchRegistry.PatchContexts.Count);
-        }
+       
     }
     
     [HarmonyPatch(typeof(GeneratedBuildings), nameof(GeneratedBuildings.LoadGeneratedBuildings))]

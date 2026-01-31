@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using HarmonyLib;
 using MovableFeatures.Movables;
 using CLog = GlobalUtil.Logger;
@@ -14,13 +13,14 @@ namespace MovableFeatures
         {
             SetBuildingDefCanMove(context);
             DeregisterComponents(context);
+            RemoveWarpConduitSenderPorts(context);
             var transform = context.Movable.gameObject.transform;
             var layer = GridZLayerLookup.Lookup(transform.position.z);
             transform.SetPosition(Grid.CellToPosCBC(context.TargetCell, layer));
             RegisterComponents(context);
             RefreshMeter(context);
             RefreshWarpConduitStatues(context);
-            RefreshConduitDispenser(context);
+            AddWarpConduitPorts(context);
         }
 
         private static void DeregisterComponents(MoveMomentContext context)
@@ -172,6 +172,55 @@ namespace MovableFeatures
             WarpConduitStatus.UpdateWarpConduitsOperational(receiverGameObject, sender.gameObject);
         }
 
+        private static void RemoveWarpConduitSenderPorts(MoveMomentContext context)
+        {
+            var go = context.Movable.gameObject;
+            if (!context.Movable.isWarpConduit) return;
+            var warpConduitSender = go.GetComponent<WarpConduitSender>();
+            if (warpConduitSender == null) return;
+            var liquidPort = WarpConduitPortAccess.GetLiquidPort(warpConduitSender);
+            var gasPort = WarpConduitPortAccess.GetGasPort(warpConduitSender);
+            if (!WarpConduitPortAccess.TryGetPortValues(liquidPort, out var liquidInputCell, out var liquidNetworkItem)
+                || !WarpConduitPortAccess.TryGetPortValues(gasPort, out var gasInputCell, out var gasNetworkItem))
+            {
+                CLog.Warning($"无法获取 {go.GetProperName()} 的 WarpConduitSender 网络字段值");
+                return;
+            }
+            Conduit.GetNetworkManager(warpConduitSender.liquidPortInfo.conduitType)
+                .RemoveFromNetworks(liquidInputCell, liquidNetworkItem, true);
+            Conduit.GetNetworkManager(warpConduitSender.gasPortInfo.conduitType)
+                .RemoveFromNetworks(gasInputCell, gasNetworkItem, true);
+            // Game.Instance.solidConduitSystem.RemoveFromNetworks(warpConduitSender.solidPort.inputCell, (object) warpConduitSender.solidPort.solidConsumer, true);
+        }
+
+        private static void AddWarpConduitPorts(MoveMomentContext context)
+        {
+            var go = context.Movable.gameObject;
+            if (!context.Movable.isWarpConduit) return;
+            var warpConduitSender = go.GetComponent<WarpConduitSender>();
+            if (warpConduitSender == null) return;
+
+            var liquidStorage = warpConduitSender.liquidStorage;
+            var gasStorage = warpConduitSender.gasStorage;
+            if (liquidStorage == null || gasStorage == null)
+            {
+                CLog.Warning($"无法获取 {go.GetProperName()} 的 WarpConduitSender Storage 字段");
+                return;
+            }
+
+            if (!WarpConduitPortAccess.TryCreatePort(go, warpConduitSender.liquidPortInfo, 1, liquidStorage,
+                    out var liquidPort)
+                || !WarpConduitPortAccess.TryCreatePort(go, warpConduitSender.gasPortInfo, 2, gasStorage,
+                    out var gasPort))
+            {
+                CLog.Warning($"无法为 {go.GetProperName()} 创建 WarpConduitSender ConduitPort 实例");
+                return;
+            }
+
+            WarpConduitPortAccess.SetLiquidPort(warpConduitSender, liquidPort);
+            WarpConduitPortAccess.SetGasPort(warpConduitSender, gasPort);
+        }
+        
         private static void RefreshConduitDispenser(MoveMomentContext context)
         {
             var go = context.Movable.gameObject;

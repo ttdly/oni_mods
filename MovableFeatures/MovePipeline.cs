@@ -11,16 +11,44 @@ namespace MovableFeatures
     {
         public static void Move(MoveMomentContext context)
         {
+            GetLayer(context);
+            if (IsJustCreateANewOne(context)) return;
             SetBuildingDefCanMove(context);
             DeregisterComponents(context);
             RemoveWarpConduitSenderPorts(context);
-            var transform = context.Movable.gameObject.transform;
-            var layer = GridZLayerLookup.Lookup(transform.position.z);
-            transform.SetPosition(Grid.CellToPosCBC(context.TargetCell, layer));
+            SetTransformPosition(context);
             RegisterComponents(context);
             RefreshMeter(context);
             RefreshWarpConduitStatues(context);
             AddWarpConduitPorts(context);
+        }
+
+        private static void GetLayer(MoveMomentContext context)
+        {
+            var transform = context.Movable.gameObject.transform;
+            context.TargetLayer = GridZLayerLookup.Lookup(transform.position.z);
+        }
+        
+        private static bool IsJustCreateANewOne(MoveMomentContext context)
+        {
+            CLog.Info(context.Movable.gameObject.PrefabID());
+            if (!(context.Movable.gameObject.PrefabID() == new Tag(SapTreeConfig.ID))) return false;
+            
+            var newGo =
+                GameUtil.KInstantiate(context.Movable.gameObject, 
+                    Grid.CellToPosCBC(context.TargetCell, context.TargetLayer), context.TargetLayer);
+            newGo.SetActive(false);
+            newGo.SetActive(true);
+            context.Movable.gameObject.SetActive(false);
+            context.Movable.gameObject.DeleteObject();
+            return true;
+            
+        }
+
+        private static void SetTransformPosition(MoveMomentContext context)
+        {
+            context.Movable.gameObject.transform.SetPosition(Grid.CellToPosCBC(context.TargetCell,
+                context.TargetLayer));
         }
 
         private static void DeregisterComponents(MoveMomentContext context)
@@ -55,11 +83,9 @@ namespace MovableFeatures
                 accessControl.SetRegistered(false);
             foreach (var manualDeliveryKg in go.GetComponents<ManualDeliveryKG>())
             {
-                DebugUtil.DevAssert(!manualDeliveryKg.IsPaused,
-                    "RocketModule ManualDeliver chore was already paused, when go.rocket lands it will re-enable it.");
                 context.StartManualDeliveryKg.Add(manualDeliveryKg.IsPaused);
                 if (manualDeliveryKg.IsPaused) continue;
-                manualDeliveryKg.Pause(true, "Rocket heading to space");
+                manualDeliveryKg.Pause(true, "Object is moving");
             }
 
             foreach (var buildingConduitEndpoints in go.GetComponents<BuildingConduitEndpoints>())
@@ -119,7 +145,7 @@ namespace MovableFeatures
                 {
                     enumerator.MoveNext();
                     if (enumerator.Current) continue;
-                    manualDeliveryKg.Pause(false, "Landing on world");
+                    manualDeliveryKg.Pause(false, "move over");
                 }
             }
 
@@ -302,6 +328,7 @@ namespace MovableFeatures
             public BaseMovable Movable { get; set; }
             public int TargetCell { get; set; }
             public List<bool> StartManualDeliveryKg { get; set; } = null;
+            public Grid.SceneLayer TargetLayer { get; set; } = Grid.SceneLayer.Background;
         }
     }
 }

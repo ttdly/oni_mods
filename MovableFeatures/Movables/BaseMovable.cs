@@ -14,7 +14,8 @@ namespace MovableFeatures.Movables
         public int originCell;
         public bool haveNeutronium;
         public bool isWarpConduit;
-
+        public bool isLonelyMinion;
+        
         public void OnRefreshUserMenu(object _)
         {
             if (gameObject.HasTag("OilWell") &&

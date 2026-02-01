@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using MovableFeatures.Movables;
 using CLog = GlobalUtil.Logger;
@@ -21,6 +22,8 @@ namespace MovableFeatures
             RefreshMeter(context);
             RefreshWarpConduitStatues(context);
             AddWarpConduitPorts(context);
+            ReActiveObject(context);
+            MoveNeutronium(context);
         }
 
         private static void GetLayer(MoveMomentContext context)
@@ -28,21 +31,69 @@ namespace MovableFeatures
             var transform = context.Movable.gameObject.transform;
             context.TargetLayer = GridZLayerLookup.Lookup(transform.position.z);
         }
-        
+
         private static bool IsJustCreateANewOne(MoveMomentContext context)
         {
             CLog.Info(context.Movable.gameObject.PrefabID());
             if (!(context.Movable.gameObject.PrefabID() == new Tag(SapTreeConfig.ID))) return false;
-            
+
             var newGo =
-                GameUtil.KInstantiate(context.Movable.gameObject, 
+                GameUtil.KInstantiate(context.Movable.gameObject,
                     Grid.CellToPosCBC(context.TargetCell, context.TargetLayer), context.TargetLayer);
             newGo.SetActive(false);
             newGo.SetActive(true);
             context.Movable.gameObject.SetActive(false);
             context.Movable.gameObject.DeleteObject();
             return true;
-            
+        }
+
+        private static void ReActiveObject(MoveMomentContext context)
+        {
+            if (!context.Movable.gameObject.HasTag(GameTags.GeyserFeature)) return;
+            context.Movable.gameObject.SetActive(false);
+            context.Movable.gameObject.SetActive(true);
+        }
+
+        private static void MoveNeutronium(MoveMomentContext context)
+        {
+            var offsets = new[] { 0 };
+            if (context.Movable.gameObject.HasTag(GameTags.GeyserFeature))
+            {
+                var buffer = new HashSet<int>();
+                for (var i = 0; i < 3; i++)
+                {
+                    if (IsMoveNeutronium(Grid.OffsetCell(context.Movable.originCell, i, -1)))
+                        buffer.Add(i);
+                    if (IsMoveNeutronium(Grid.OffsetCell(context.Movable.originCell, -i, -1)))
+                        buffer.Add(-i);
+                }
+
+                offsets = buffer.ToArray();
+            }
+
+            if (context.Movable.gameObject.PrefabID() == new Tag(GeothermalControllerConfig.ID))
+                offsets = new[] { -4, -3, -2, -1, 0, 1, 2, 3, 4 };
+
+            if (context.Movable.gameObject.PrefabID() == new Tag(GeothermalVentConfig.ID))
+                offsets = new[] { -1, 0, 1 };
+
+            foreach (var offset in offsets)
+            {
+                var cell = Grid.OffsetCell(context.Movable.originCell, offset, -1);
+                if (!(Grid.Element.Length < cell || Grid.Element[cell] == null || !IsMoveNeutronium(cell)))
+                    SimMessages.ReplaceElement(cell, SimHashes.Vacuum, CellEventLogger.Instance.DebugTool, 0);
+                cell = Grid.OffsetCell(context.TargetCell, offset, -1);
+                if (Grid.IsValidCell(cell))
+                    SimMessages.ReplaceElement(cell, SimHashes.Unobtanium, CellEventLogger.Instance.DebugTool,
+                        float.PositiveInfinity);
+            }
+
+            return;
+
+            bool IsMoveNeutronium(int cell)
+            {
+                return Grid.Element[cell].id == SimHashes.Unobtanium;
+            }
         }
 
         private static void SetTransformPosition(MoveMomentContext context)
@@ -212,6 +263,7 @@ namespace MovableFeatures
                 CLog.Warning($"无法获取 {go.GetProperName()} 的 WarpConduitSender 网络字段值");
                 return;
             }
+
             Conduit.GetNetworkManager(warpConduitSender.liquidPortInfo.conduitType)
                 .RemoveFromNetworks(liquidInputCell, liquidNetworkItem, true);
             Conduit.GetNetworkManager(warpConduitSender.gasPortInfo.conduitType)
@@ -245,82 +297,6 @@ namespace MovableFeatures
 
             WarpConduitPortAccess.SetLiquidPort(warpConduitSender, liquidPort);
             WarpConduitPortAccess.SetGasPort(warpConduitSender, gasPort);
-        }
-        
-        private static void RefreshConduitDispenser(MoveMomentContext context)
-        {
-            var go = context.Movable.gameObject;
-            var conduitDispensers =  go.GetComponents<ConduitDispenser>();
-            if (context.Movable.isWarpConduit && context.Movable.GetComponent<WarpConduitReceiver>() != null)
-            {
-                var buffer = new List<ConduitDispenser>();
-                CLog.Info("1223123");
-                var warpConduitReceiver = context.Movable.GetComponent<WarpConduitReceiver>();
-                CLog.Info(warpConduitReceiver == null);
-                if (warpConduitReceiver.senderGasStorage != null)
-                {
-                    var conduitDispenser = warpConduitReceiver.senderGasStorage.GetComponent<ConduitDispenser>();
-                    if (conduitDispenser != null) buffer.Add(conduitDispenser);
-
-                }
-                CLog.Info("1");
-                if (warpConduitReceiver.senderLiquidStorage != null)
-                {
-                    var conduitDispenser = warpConduitReceiver.senderLiquidStorage.GetComponent<ConduitDispenser>();
-                    if (conduitDispenser != null) buffer.Add(conduitDispenser);
-                }
-                conduitDispensers = buffer.ToArray();
-                CLog.Info("1qq");
-            }
-            
-            CLog.Info(conduitDispensers.Length.ToString());
-            if (conduitDispensers == null || conduitDispensers.Length == 0) return;
-            var getInputCell = AccessTools.Method(typeof(ConduitDispenser), "GetInputCell");
-            var utilityCell = AccessTools.Field(typeof(ConduitDispenser), "utilityCell");
-            var partitionerEntryField = AccessTools.Field(typeof(ConduitDispenser), "partitionerEntry");
-            var onConduitConnectionChanged = AccessTools.Method(typeof(ConduitDispenser), "OnConduitConnectionChanged");
-            if (getInputCell == null || utilityCell == null || partitionerEntryField == null 
-                || onConduitConnectionChanged == null)
-            {
-                CLog.Warning($"无法对 {go.GetProperName()} 的 ConduitDispenser 进行修改，因为无法获取私有属性与方法");
-                return;
-            }
-            foreach (var conduitDispenser in go.GetComponents<ConduitDispenser>())
-            {
-                var cellObj = getInputCell.Invoke(conduitDispenser, new object[] { conduitDispenser.conduitType });
-                if (!(cellObj is int newCell))
-                {
-                    CLog.Warning($"无法获取 {go.GetProperName()}_ConduitDispenser 在网络中的 cell 值");
-                    continue;
-                }
-                var oldPartitionerEntry = partitionerEntryField.GetValue(conduitDispenser);
-                if (!(oldPartitionerEntry is HandleVector<int>.Handle partitionerEntry))
-                {
-                    CLog.Warning($"无法获取 {go.GetProperName()}_ConduitDispenser 中 partitionerEntry 属性");
-                    continue;
-                }
-                if (partitionerEntry.IsValid()) GameScenePartitioner.Instance.Free(ref partitionerEntry);
-                utilityCell.SetValue(conduitDispenser, newCell);
-                var layer = GameScenePartitioner.Instance.objectLayers[
-                    (conduitDispenser.conduitType == ConduitType.Gas) ? 12 : 16
-                ];
-                var newPartitionerEntry = GameScenePartitioner.Instance.Add(
-                    "ConduitConsumer.OnSpawn", 
-                    go,
-                    newCell,
-                    layer, 
-                    (Action<object>)Delegate.CreateDelegate(
-                        typeof(Action<object>),
-                        conduitDispenser.conduitType, 
-                        onConduitConnectionChanged
-                        )
-                    );
-                partitionerEntryField.SetValue(conduitDispenser, newPartitionerEntry);
-                GameScenePartitioner.Instance.TriggerEvent(
-                    newCell,
-                    layer,
-                    null);
-            }
         }
 
         public class MoveMomentContext

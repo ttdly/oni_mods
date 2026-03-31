@@ -10,11 +10,8 @@ namespace MovableFeatures.Movables
         private static readonly EventSystem.IntraObjectHandler<BaseMovable> OnRefreshUserMenuDelegate =
             new EventSystem.IntraObjectHandler<BaseMovable>((component, data) => component.OnRefreshUserMenu(data));
 
-        public bool crossPlantMove = true;
+        public MovableFlags flag;
         public int originCell;
-        public bool haveNeutronium;
-        public bool isWarpConduit;
-        public bool isLonelyMinion;
         
         public void OnRefreshUserMenu(object _)
         {
@@ -45,7 +42,7 @@ namespace MovableFeatures.Movables
 
         public bool CanMoveTo(int targetCell)
         {
-            if (!crossPlantMove && Grid.WorldIdx[targetCell] != gameObject.GetMyWorldId()) return false;
+            if ((flag & MovableFlags.BannedCrossPlantMove) != 0 && Grid.WorldIdx[targetCell] != gameObject.GetMyWorldId()) return false;
             try
             {
                 if (!Grid.IsValidCell(targetCell)) return false;
@@ -159,7 +156,7 @@ namespace MovableFeatures.Movables
 
         private void WarpConduitHandler()
         {
-            if (!isWarpConduit) return;
+            // if (!isWarpConduit) return;
             if (gameObject.TryGetComponent(out WarpConduitReceiver receiver))
             {
                 var senderGameObject = receiver.senderGasStorage.gameObject;

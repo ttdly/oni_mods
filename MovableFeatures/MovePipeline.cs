@@ -56,6 +56,7 @@ namespace MovableFeatures
 
         private static void MoveNeutronium(MoveMomentContext context)
         {
+            if (!context.HaveNeutronium) return;
             var offsets = new[] { 0 };
             if (context.Movable.gameObject.HasTag(GameTags.GeyserFeature))
             {
@@ -139,6 +140,8 @@ namespace MovableFeatures
                 manualDeliveryKg.Pause(true, "Object is moving");
             }
 
+            GameComps.GetKComponentManager(typeof(RequiresFoundation)).Remove(go);
+
             foreach (var buildingConduitEndpoints in go.GetComponents<BuildingConduitEndpoints>())
                 buildingConduitEndpoints.RemoveEndPoint();
             var workable = go.GetComponent<Workable>();
@@ -200,6 +203,8 @@ namespace MovableFeatures
                 }
             }
 
+            GameComps.GetKComponentManager(typeof(RequiresFoundation)).Add(go);
+
             foreach (var buildingConduitEndpoints in go.GetComponents<BuildingConduitEndpoints>())
                 buildingConduitEndpoints.AddEndpoint();
             var workable = go.GetComponent<Workable>();
@@ -234,7 +239,7 @@ namespace MovableFeatures
 
         private static void RefreshWarpConduitStatues(MoveMomentContext context)
         {
-            if (!context.Movable.isWarpConduit) return;
+            if (!context.IsWarpConduit) return;
             var go = context.Movable.gameObject;
             if (go.TryGetComponent(out WarpConduitReceiver receiver))
             {
@@ -252,7 +257,7 @@ namespace MovableFeatures
         private static void RemoveWarpConduitSenderPorts(MoveMomentContext context)
         {
             var go = context.Movable.gameObject;
-            if (!context.Movable.isWarpConduit) return;
+            if (!context.IsWarpConduit) return;
             var warpConduitSender = go.GetComponent<WarpConduitSender>();
             if (warpConduitSender == null) return;
             var liquidPort = WarpConduitPortAccess.GetLiquidPort(warpConduitSender);
@@ -274,7 +279,7 @@ namespace MovableFeatures
         private static void AddWarpConduitPorts(MoveMomentContext context)
         {
             var go = context.Movable.gameObject;
-            if (!context.Movable.isWarpConduit) return;
+            if (!context.IsWarpConduit) return;
             var warpConduitSender = go.GetComponent<WarpConduitSender>();
             if (warpConduitSender == null) return;
 
@@ -305,6 +310,9 @@ namespace MovableFeatures
             public int TargetCell { get; set; }
             public List<bool> StartManualDeliveryKg { get; set; } = null;
             public Grid.SceneLayer TargetLayer { get; set; } = Grid.SceneLayer.Background;
+
+            public bool IsWarpConduit => (Movable.flag &  MovableFlags.IsWarpConduit) != 0;
+            public bool HaveNeutronium => (Movable.flag & MovableFlags.HaveNeutronium) != 0;
         }
     }
 }

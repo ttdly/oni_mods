@@ -1,4 +1,5 @@
 ﻿using System;
+using Database;
 using HarmonyLib;
 using KMod;
 using MovableFeatures.Movables;
@@ -52,10 +53,7 @@ namespace MovableFeatures
             if (!PatchRegistry.BuildingMovableContexts.ContainsKey(def.BuildingComplete.gameObject.PrefabID())) return;
             var movable = def.BuildingComplete.gameObject.AddOrGet<BaseMovable>();
             var context = PatchRegistry.BuildingMovableContexts[def.BuildingComplete.gameObject.PrefabID()];
-            movable.haveNeutronium = context.Neutronium;
-            movable.crossPlantMove = context.CrossMove;
-            movable.isWarpConduit = context.WarpConduit;
-            movable.isLonelyMinion = context.LonelyMinion;
+            movable.flag = context.Flags;
             CLog.Info($"组件添加至建筑 {def.BuildingComplete.gameObject.PrefabID()}");
         }
     }
@@ -69,17 +67,14 @@ namespace MovableFeatures
             {
                 var movable = __result.AddOrGet<BaseMovable>();
                 var context = PatchRegistry.EntityMovableContexts[__result.PrefabID()];
-                movable.haveNeutronium = context.Neutronium;
-                movable.crossPlantMove = context.CrossMove;
-                movable.isWarpConduit = context.WarpConduit;
-                movable.isLonelyMinion = context.LonelyMinion;
+                movable.flag = context.Flags; 
                 CLog.Info($"组件已添加至 {__result.PrefabID()}");
                 return;
             }
 
             if (__result.HasTag(GameTags.GeyserFeature))
             {
-                __result.AddOrGet<BaseMovable>().haveNeutronium = true;
+                __result.AddOrGet<BaseMovable>().flag = MovableFlags.HaveNeutronium;
                 return;
             }
             if (__result.HasTag(GameTags.Gravitas)) __result.AddOrGet<BaseMovable>();

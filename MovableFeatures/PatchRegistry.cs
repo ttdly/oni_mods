@@ -1,51 +1,47 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using CLog = GlobalUtil.Logger;
+using static MovableFeatures.MovableFlags;
 
 namespace MovableFeatures
 {
     public class PatchRegistry
     {
-        public enum GameObjectType
-        {
-            Building = 0,
-            Entity = 1
-        }
-
         public static Dictionary<MethodBase, PatchContext> PatchContexts = new Dictionary<MethodBase, PatchContext>();
-        public static Dictionary<Tag, PatchContext> BuildingMovableContexts = new Dictionary<Tag, PatchContext>();
-        public static Dictionary<Tag, PatchContext> EntityMovableContexts = new Dictionary<Tag, PatchContext>();
-        
-        public static void Register<TPatchType>(
-            GameObjectType gameObjectType = GameObjectType.Entity,
-            bool crossMove = true,
-            bool geyser = false,
-            bool warpConduit = false,
-            bool lonelyMinion = false,
-            string prefabId = null)
+
+        public static readonly Dictionary<Tag, PatchContext> BuildingMovableContexts =
+            new Dictionary<Tag, PatchContext>();
+
+        public static readonly Dictionary<Tag, PatchContext>
+            EntityMovableContexts = new Dictionary<Tag, PatchContext>();
+
+        private static void RegisterBuilding<TPatchType>(
+            string prefabId,
+            MovableFlags flags = MovableFlags.None)
         {
             if (prefabId == null) return;
 
             var patchContext = new PatchContext
             {
-                GameObjectType = gameObjectType,
-                CrossMove = crossMove,
-                Neutronium = geyser,
-                WarpConduit = warpConduit,
-                LonelyMinion = lonelyMinion
+                Flags = flags
             };
-            switch (gameObjectType)
+            BuildingMovableContexts.Add(new Tag(prefabId), patchContext);
+#if DEBUG
+            CLog.Info($"已注册 {typeof(TPatchType)}");
+#endif
+        }
+
+        private static void RegisterEntity<TPatchType>(
+            string prefabId,
+            MovableFlags flags = MovableFlags.None)
+        {
+            if (prefabId == null) return;
+
+            var patchContext = new PatchContext
             {
-                case GameObjectType.Building:
-                    BuildingMovableContexts.Add(new Tag(prefabId), patchContext);            
-                    break;
-                case GameObjectType.Entity:
-                    EntityMovableContexts.Add(new Tag(prefabId), patchContext);
-                    break;
-                default:
-                    CLog.Error($"不支持的注册类型 {gameObjectType}");
-                    break;
-            }
+                Flags = flags
+            };
+            EntityMovableContexts.Add(new Tag(prefabId), patchContext);
 #if DEBUG
             CLog.Info($"已注册 {typeof(TPatchType)}");
 #endif
@@ -53,77 +49,69 @@ namespace MovableFeatures
 
         public static void RegisterPatches()
         {
+            
             // 打印仓
-            Register<HeadquartersConfig>(GameObjectType.Building, false, prefabId: HeadquartersConfig.ID);
+            RegisterBuilding<HeadquartersConfig>(HeadquartersConfig.ID, BannedCrossPlantMove);
             // 便携式打印舱
-            Register<ExobaseHeadquartersConfig>(GameObjectType.Building, false, prefabId: ExobaseHeadquartersConfig.ID);
+            RegisterBuilding<ExobaseHeadquartersConfig>(ExobaseHeadquartersConfig.ID, BannedCrossPlantMove);
             // 时空裂口开放器
-            Register<TemporalTearOpenerConfig>(GameObjectType.Building, prefabId: TemporalTearOpenerConfig.ID);
+            RegisterBuilding<TemporalTearOpenerConfig>(TemporalTearOpenerConfig.ID);
             // 供给传送器输出端
-            Register<WarpConduitSenderConfig>(GameObjectType.Building, warpConduit: true,
-                prefabId: WarpConduitSenderConfig.ID);
+            RegisterBuilding<WarpConduitSenderConfig>(WarpConduitSenderConfig.ID, WarpConduit);
             // 供给传送器输入端
-            Register<WarpConduitReceiverConfig>(GameObjectType.Building, warpConduit: true,
-                prefabId: WarpConduitReceiverConfig.ID);
+            RegisterBuilding<WarpConduitReceiverConfig>(WarpConduitReceiverConfig.ID, WarpConduit);
             // 神经振荡仪
-            Register<GeneShufflerConfig>(prefabId: "GeneShuffler");
+            RegisterEntity<GeneShufflerConfig>("GeneShuffler");
             // 反熵热量中和器
-            Register<MassiveHeatSinkConfig>(GameObjectType.Building, prefabId: MassiveHeatSinkConfig.ID);
+            RegisterBuilding<MassiveHeatSinkConfig>(MassiveHeatSinkConfig.ID);
             // 睡衣柜 
-            Register<GravitasContainerConfig>(GameObjectType.Building, prefabId: GravitasContainerConfig.ID);
+            RegisterBuilding<GravitasContainerConfig>(GravitasContainerConfig.ID);
             // 柴堆
-            Register<WoodStorageConfig>(GameObjectType.Building, prefabId: WoodStorageConfig.ID);
+            RegisterBuilding<WoodStorageConfig>(WoodStorageConfig.ID);
             // 储油石
-            Register<OilWellConfig>(prefabId: OilWellConfig.ID);
+            RegisterEntity<OilWellConfig>(OilWellConfig.ID);
             // 试验体52B
-            Register<SapTreeConfig>(prefabId: SapTreeConfig.ID);
+            RegisterEntity<SapTreeConfig>(SapTreeConfig.ID);
             // 辐射蜂巢
-            Register<BaseBeeHiveConfig>(prefabId: BaseBeeHiveConfig.ID);
+            RegisterEntity<BaseBeeHiveConfig>(BaseBeeHiveConfig.ID);
             // 流明石英
-            Register<PinkRockConfig>(prefabId: "PinkRock");
+            RegisterEntity<PinkRockConfig>("PinkRock");
             // 低温箱3000
-            Register<CryoTankConfig>(prefabId: CryoTankConfig.ID);
+            RegisterEntity<CryoTankConfig>(CryoTankConfig.ID);
             // 传送器
-            Register<WarpPortalConfig>(prefabId: WarpPortalConfig.ID);
+            RegisterEntity<WarpPortalConfig>(WarpPortalConfig.ID);
             // 接收器
-            Register<WarpReceiverConfig>(prefabId: WarpReceiverConfig.ID);
+            RegisterEntity<WarpReceiverConfig>(WarpReceiverConfig.ID);
             // 地热排气孔
-            Register<GeothermalVentConfig>(prefabId: GeothermalVentConfig.ID);
+            RegisterEntity<GeothermalVentConfig>(GeothermalVentConfig.ID, HaveNeutronium);
             // 地热热泵
-            Register<GeothermalControllerConfig>(GameObjectType.Building, prefabId: GeothermalControllerConfig.ID);
+            RegisterBuilding<GeothermalControllerConfig>(GeothermalControllerConfig.ID, HaveNeutronium);
             // 坠毁卫星1
-            Register<PropSurfaceSatellite1Config>(prefabId: PropSurfaceSatellite1Config.ID);
+            RegisterEntity<PropSurfaceSatellite1Config>(PropSurfaceSatellite1Config.ID);
             // 坠毁卫星2
-            Register<PropSurfaceSatellite2Config>(prefabId: PropSurfaceSatellite2Config.ID);
+            RegisterEntity<PropSurfaceSatellite2Config>(PropSurfaceSatellite2Config.ID);
             // 坠毁卫星3
-            Register<PropSurfaceSatellite3Config>(prefabId: PropSurfaceSatellite3Config.ID);
+            RegisterEntity<PropSurfaceSatellite3Config>(PropSurfaceSatellite3Config.ID);
             // 小动物衍变器
-            Register<GravitasCreatureManipulatorConfig>(GameObjectType.Building, 
-                prefabId: GravitasCreatureManipulatorConfig.ID);
+            RegisterBuilding<GravitasCreatureManipulatorConfig>(GravitasCreatureManipulatorConfig.ID);
             // 梦境合成仪器
-            Register<MegaBrainTankConfig>(GameObjectType.Building, prefabId: MegaBrainTankConfig.ID);
+            RegisterBuilding<MegaBrainTankConfig>(MegaBrainTankConfig.ID);
             // 神秘隐士
-            Register<LonelyMinionHouseConfig>(GameObjectType.Building, lonelyMinion: true,
-                prefabId: LonelyMinionHouseConfig.ID);
+            RegisterBuilding<LonelyMinionHouseConfig>(LonelyMinionHouseConfig.ID, MovableFlags.LonelyMinion);
             // 远古标本
-            Register<FossilSiteConfig_Ice>(prefabId: FossilSiteConfig_Ice.ID);
-            Register<FossilSiteConfig_Resin>(prefabId: FossilSiteConfig_Resin.ID);
-            Register<FossilSiteConfig_Rock>(prefabId: FossilSiteConfig_Rock.ID);
-            Register<FossilDigSiteConfig>(GameObjectType.Building, prefabId: FossilDigSiteConfig.ID);
+            RegisterEntity<FossilSiteConfig_Ice>(FossilSiteConfig_Ice.ID);
+            RegisterEntity<FossilSiteConfig_Resin>(FossilSiteConfig_Resin.ID);
+            RegisterEntity<FossilSiteConfig_Rock>(FossilSiteConfig_Rock.ID);
+            RegisterBuilding<FossilDigSiteConfig>(FossilDigSiteConfig.ID);
             // 生物织构仪
-            Register<MorbRoverMakerConfig>(GameObjectType.Building, prefabId: MorbRoverMakerConfig.ID);
+            RegisterBuilding<MorbRoverMakerConfig>(MorbRoverMakerConfig.ID);
             // 打印截能仪器
-            Register<HijackedHeadquartersConfig>(GameObjectType.Building, prefabId: HijackedHeadquartersConfig.ID);
-        }
-        
-        public class PatchContext
-        {
-            public GameObjectType GameObjectType { get; set; }
-            public bool CrossMove { get; set; }
-            public bool Neutronium { get; set; }
-            public bool WarpConduit { get; set; }
-            public bool LonelyMinion { get; set; }
+            RegisterBuilding<HijackedHeadquartersConfig>(HijackedHeadquartersConfig.ID);
         }
 
+        public class PatchContext
+        {
+            public MovableFlags Flags { get; set; }
+        }
     }
 }

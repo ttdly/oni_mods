@@ -1,7 +1,7 @@
 ﻿<Project>
   <!--  local ref-->
   <PropertyGroup>
-    <LibraryDir>$(MSBuildThisFileDirectory)_libs</LibraryDir>
+    <LibraryDir>C:\SteamLibrary\steamapps\common\OxygenNotIncluded\OxygenNotIncluded_Data\Managed</LibraryDir>
   </PropertyGroup>
   
   <ItemGroup>
@@ -28,7 +28,8 @@
   <PropertyGroup>
     <March25Qof>659901</March25Qof>
     <DLC4>674504</DLC4>
-    <LatestBuild>$(DLC4)</LatestBuild>
+    <Jan26Fix2>707956</Jan26Fix2>
+    <LatestBuild>$(Jan26Fix2)</LatestBuild>
   </PropertyGroup>
   
   <!--  default settings-->

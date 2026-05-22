@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
 using MovableFeatures.Movables;
 using CLog = GlobalUtil.Logger;
 using Object = UnityEngine.Object;
@@ -13,38 +11,53 @@ namespace MovableFeatures
         public static void Move(MoveMomentContext context)
         {
             GetLayer(context);
-            if (IsJustCreateANewOne(context)) return;
+            if (context.Movable.flag.HasFlag(MovableFlags.JustCreateNew))
+            {
+                CreateNewPipeline(context);
+            }
+            else
+            {
+                MoveExistsPipeline(context);
+            }
+            ReActiveObject(context);
+            MoveNeutronium(context);
+        }
+
+        private static void CreateNewPipeline(MoveMomentContext context)
+        {
+            var newGo =
+                GameUtil.KInstantiate(context.Movable.gameObject,
+                    Grid.CellToPosCBC(context.TargetCell, context.TargetLayer), context.TargetLayer);
+            var loreBearer = context.Movable.gameObject.GetComponent<LoreBearer>();
+            if (loreBearer != null) ComponentAttrToggle.ToggleLoreBearer(loreBearer, newGo.AddOrGet<LoreBearer>());
+            var setLocker = context.Movable.gameObject.GetComponent<SetLocker>();
+            if (setLocker != null) ComponentAttrToggle.ToggleSetLocker(setLocker, newGo.AddOrGet<SetLocker>());
+            var activatable = context.Movable.gameObject.GetComponent<Activatable>();
+            if (activatable != null) ComponentAttrToggle.ToggleActivated(activatable, newGo.AddOrGet<Activatable>());
+            // RefreshWarpConduitStatues(context);
+            newGo.SetActive(false);
+            newGo.SetActive(true);
+            context.Movable.gameObject.SetActive(false);
+            context.Movable.gameObject.DeleteObject();
+
+        }
+
+        private static void MoveExistsPipeline(MoveMomentContext context)
+        {
             SetBuildingDefCanMove(context);
             DeregisterComponents(context);
-            RemoveWarpConduitSenderPorts(context);
+            // RemoveWarpConduitSenderPorts(context);
             SetTransformPosition(context);
             RegisterComponents(context);
             RefreshMeter(context);
-            RefreshWarpConduitStatues(context);
-            AddWarpConduitPorts(context);
-            ReActiveObject(context);
-            MoveNeutronium(context);
+            // RefreshWarpConduitStatues(context);
+            // AddWarpConduitPorts(context);
         }
 
         private static void GetLayer(MoveMomentContext context)
         {
             var transform = context.Movable.gameObject.transform;
             context.TargetLayer = GridZLayerLookup.Lookup(transform.position.z);
-        }
-
-        private static bool IsJustCreateANewOne(MoveMomentContext context)
-        {
-            CLog.Info(context.Movable.gameObject.PrefabID());
-            if (!(context.Movable.gameObject.PrefabID() == new Tag(SapTreeConfig.ID))) return false;
-
-            var newGo =
-                GameUtil.KInstantiate(context.Movable.gameObject,
-                    Grid.CellToPosCBC(context.TargetCell, context.TargetLayer), context.TargetLayer);
-            newGo.SetActive(false);
-            newGo.SetActive(true);
-            context.Movable.gameObject.SetActive(false);
-            context.Movable.gameObject.DeleteObject();
-            return true;
         }
 
         private static void ReActiveObject(MoveMomentContext context)
@@ -113,7 +126,11 @@ namespace MovableFeatures
                 context.StartManualDeliveryKg.Clear();
             var building = go.GetComponent<Building>();
             if (building != null)
+            {
                 building.Def.UnmarkArea(cell, building.Orientation, building.Def.ObjectLayer, go);
+                GameComps.GetKComponentManager(typeof(RequiresFoundation)).Remove(go);
+            }
+
             var kSelectable = go.GetComponent<KSelectable>();
             kSelectable.IsSelectable = false;
             var buildingComplete = go.GetComponent<BuildingComplete>();
@@ -123,7 +140,11 @@ namespace MovableFeatures
                 SelectTool.Instance.Select(null);
             var deconstructable = go.GetComponent<Deconstructable>();
             if (deconstructable != null)
+            {
                 deconstructable.SetAllowDeconstruction(false);
+                context.CanDeconstructable = deconstructable.allowDeconstruction;
+            }
+
             var handle = GameComps.StructureTemperatures.GetHandle(go);
             if (handle.IsValid())
                 GameComps.StructureTemperatures.Disable(handle);
@@ -139,8 +160,6 @@ namespace MovableFeatures
                 if (manualDeliveryKg.IsPaused) continue;
                 manualDeliveryKg.Pause(true, "Object is moving");
             }
-
-            GameComps.GetKComponentManager(typeof(RequiresFoundation)).Remove(go);
 
             foreach (var buildingConduitEndpoints in go.GetComponents<BuildingConduitEndpoints>())
                 buildingConduitEndpoints.RemoveEndPoint();
@@ -161,7 +180,9 @@ namespace MovableFeatures
 
         private static void RegisterComponents(MoveMomentContext context)
         {
+
             var go = context.Movable.gameObject;
+            CLog.Info($"{go.GetProperName()}--{go.GetComponent<OccupyArea>() != null}");
             var cell = Grid.PosToCell(go);
             var building = go.GetComponent<Building>();
             if (building != null)
@@ -170,8 +191,17 @@ namespace MovableFeatures
                 if (building.GetComponent<OccupyArea>() != null)
                     building.GetComponent<OccupyArea>().UpdateOccupiedArea();
                 var logicPorts = building.GetComponent<LogicPorts>();
+                GameComps.GetKComponentManager(typeof(RequiresFoundation)).Add(go);
                 if ((bool)(Object)logicPorts && go.GetComponent<BuildingComplete>() != null)
                     logicPorts.OnMove();
+            }
+            else
+            {
+                if (go.GetComponent<OccupyArea>() != null)
+                {
+                    go.GetComponent<OccupyArea>().UpdateOccupiedArea();
+                }
+
             }
 
             go.GetComponent<KSelectable>().IsSelectable = true;
@@ -179,7 +209,7 @@ namespace MovableFeatures
             if (buildingComplete != null)
                 buildingComplete.UpdatePosition();
             var deconstructable = go.GetComponent<Deconstructable>();
-            if (deconstructable != null)
+            if (deconstructable != null && context.CanDeconstructable)
                 deconstructable.SetAllowDeconstruction(true);
             var handle = GameComps.StructureTemperatures.GetHandle(go.gameObject);
             if (handle.IsValid())
@@ -202,9 +232,6 @@ namespace MovableFeatures
                     manualDeliveryKg.Pause(false, "move over");
                 }
             }
-
-            GameComps.GetKComponentManager(typeof(RequiresFoundation)).Add(go);
-
             foreach (var buildingConduitEndpoints in go.GetComponents<BuildingConduitEndpoints>())
                 buildingConduitEndpoints.AddEndpoint();
             var workable = go.GetComponent<Workable>();
@@ -237,81 +264,14 @@ namespace MovableFeatures
                 buildingDef.Def.CanMove = true;
         }
 
-        private static void RefreshWarpConduitStatues(MoveMomentContext context)
-        {
-            if (!context.IsWarpConduit) return;
-            var go = context.Movable.gameObject;
-            if (go.TryGetComponent(out WarpConduitReceiver receiver))
-            {
-                var senderGameObject = receiver.senderGasStorage.gameObject;
-                WarpConduitStatus.UpdateWarpConduitsOperational(senderGameObject, receiver.gameObject);
-                return;
-            }
-
-            if (!go.TryGetComponent(out WarpConduitSender sender)) return;
-
-            var receiverGameObject = sender.receiver.gameObject;
-            WarpConduitStatus.UpdateWarpConduitsOperational(receiverGameObject, sender.gameObject);
-        }
-
-        private static void RemoveWarpConduitSenderPorts(MoveMomentContext context)
-        {
-            var go = context.Movable.gameObject;
-            if (!context.IsWarpConduit) return;
-            var warpConduitSender = go.GetComponent<WarpConduitSender>();
-            if (warpConduitSender == null) return;
-            var liquidPort = WarpConduitPortAccess.GetLiquidPort(warpConduitSender);
-            var gasPort = WarpConduitPortAccess.GetGasPort(warpConduitSender);
-            if (!WarpConduitPortAccess.TryGetPortValues(liquidPort, out var liquidInputCell, out var liquidNetworkItem)
-                || !WarpConduitPortAccess.TryGetPortValues(gasPort, out var gasInputCell, out var gasNetworkItem))
-            {
-                CLog.Warning($"无法获取 {go.GetProperName()} 的 WarpConduitSender 网络字段值");
-                return;
-            }
-
-            Conduit.GetNetworkManager(warpConduitSender.liquidPortInfo.conduitType)
-                .RemoveFromNetworks(liquidInputCell, liquidNetworkItem, true);
-            Conduit.GetNetworkManager(warpConduitSender.gasPortInfo.conduitType)
-                .RemoveFromNetworks(gasInputCell, gasNetworkItem, true);
-            // Game.Instance.solidConduitSystem.RemoveFromNetworks(warpConduitSender.solidPort.inputCell, (object) warpConduitSender.solidPort.solidConsumer, true);
-        }
-
-        private static void AddWarpConduitPorts(MoveMomentContext context)
-        {
-            var go = context.Movable.gameObject;
-            if (!context.IsWarpConduit) return;
-            var warpConduitSender = go.GetComponent<WarpConduitSender>();
-            if (warpConduitSender == null) return;
-
-            var liquidStorage = warpConduitSender.liquidStorage;
-            var gasStorage = warpConduitSender.gasStorage;
-            if (liquidStorage == null || gasStorage == null)
-            {
-                CLog.Warning($"无法获取 {go.GetProperName()} 的 WarpConduitSender Storage 字段");
-                return;
-            }
-
-            if (!WarpConduitPortAccess.TryCreatePort(go, warpConduitSender.liquidPortInfo, 1, liquidStorage,
-                    out var liquidPort)
-                || !WarpConduitPortAccess.TryCreatePort(go, warpConduitSender.gasPortInfo, 2, gasStorage,
-                    out var gasPort))
-            {
-                CLog.Warning($"无法为 {go.GetProperName()} 创建 WarpConduitSender ConduitPort 实例");
-                return;
-            }
-
-            WarpConduitPortAccess.SetLiquidPort(warpConduitSender, liquidPort);
-            WarpConduitPortAccess.SetGasPort(warpConduitSender, gasPort);
-        }
-
         public class MoveMomentContext
         {
             public BaseMovable Movable { get; set; }
             public int TargetCell { get; set; }
-            public List<bool> StartManualDeliveryKg { get; set; } = null;
+            public List<bool> StartManualDeliveryKg { get; set; }
             public Grid.SceneLayer TargetLayer { get; set; } = Grid.SceneLayer.Background;
+            public bool CanDeconstructable;
 
-            public bool IsWarpConduit => (Movable.flag &  MovableFlags.IsWarpConduit) != 0;
             public bool HaveNeutronium => (Movable.flag & MovableFlags.HaveNeutronium) != 0;
         }
     }

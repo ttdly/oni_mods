@@ -49,7 +49,6 @@ namespace MovableFeatures
 
         public static void RegisterPatches()
         {
-            
             // 打印仓
             RegisterBuilding<HeadquartersConfig>(HeadquartersConfig.ID, BannedCrossPlantMove);
             // 便携式打印舱
@@ -71,7 +70,7 @@ namespace MovableFeatures
             // 储油石
             RegisterEntity<OilWellConfig>(OilWellConfig.ID);
             // 试验体52B
-            RegisterEntity<SapTreeConfig>(SapTreeConfig.ID);
+            RegisterEntity<SapTreeConfig>(SapTreeConfig.ID, MovableFlags.SapTree);
             // 辐射蜂巢
             RegisterEntity<BaseBeeHiveConfig>(BaseBeeHiveConfig.ID);
             // 流明石英
@@ -79,14 +78,14 @@ namespace MovableFeatures
             // 低温箱3000
             RegisterEntity<CryoTankConfig>(CryoTankConfig.ID);
             // 传送器
-            RegisterEntity<WarpPortalConfig>(WarpPortalConfig.ID);
+            RegisterEntity<WarpPortalConfig>(WarpPortalConfig.ID, BannedCrossPlantMove);
             // 接收器
-            RegisterEntity<WarpReceiverConfig>(WarpReceiverConfig.ID);
+            RegisterEntity<WarpReceiverConfig>(WarpReceiverConfig.ID, BannedCrossPlantMove);
             // 地热排气孔
             RegisterEntity<GeothermalVentConfig>(GeothermalVentConfig.ID, HaveNeutronium);
             // 地热热泵
             RegisterBuilding<GeothermalControllerConfig>(GeothermalControllerConfig.ID, HaveNeutronium);
-            // 坠毁卫星1
+            // 坠毁卫星1 辐射不同步
             RegisterEntity<PropSurfaceSatellite1Config>(PropSurfaceSatellite1Config.ID);
             // 坠毁卫星2
             RegisterEntity<PropSurfaceSatellite2Config>(PropSurfaceSatellite2Config.ID);
@@ -94,7 +93,7 @@ namespace MovableFeatures
             RegisterEntity<PropSurfaceSatellite3Config>(PropSurfaceSatellite3Config.ID);
             // 小动物衍变器
             RegisterBuilding<GravitasCreatureManipulatorConfig>(GravitasCreatureManipulatorConfig.ID);
-            // 梦境合成仪器
+            // 梦境合成仪器 LED 灯没有迁移
             RegisterBuilding<MegaBrainTankConfig>(MegaBrainTankConfig.ID);
             // 神秘隐士
             RegisterBuilding<LonelyMinionHouseConfig>(LonelyMinionHouseConfig.ID, MovableFlags.LonelyMinion);
@@ -105,7 +104,7 @@ namespace MovableFeatures
             RegisterBuilding<FossilDigSiteConfig>(FossilDigSiteConfig.ID);
             // 生物织构仪
             RegisterBuilding<MorbRoverMakerConfig>(MorbRoverMakerConfig.ID);
-            // 打印截能仪器
+            // 打印截能仪器 不显示 ui
             RegisterBuilding<HijackedHeadquartersConfig>(HijackedHeadquartersConfig.ID);
         }
 

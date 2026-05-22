@@ -1,6 +1,4 @@
-﻿using System;
-using Database;
-using HarmonyLib;
+﻿using HarmonyLib;
 using KMod;
 using MovableFeatures.Movables;
 using UnityEngine;
@@ -23,27 +21,13 @@ namespace MovableFeatures
 
         private static void CreateTranslationTemplate()
         {
-#if DEBUG
+#if DEBUG && false
             CLog.Info("创建翻译模板");
             ModUtil.RegisterForTranslation(typeof(Text));
 #endif
         }
     }
 
-    // [HarmonyPatch(typeof(GeyserGenericConfig))]
-    // [HarmonyPatch(nameof(GeyserGenericConfig.CreateGeyser))]
-    // [HarmonyPatch(new[]
-    // {
-    //     typeof(string), typeof(string), typeof(int), typeof(int), typeof(string), typeof(string),
-    //     typeof(HashedString), typeof(float), typeof(string[]), typeof(string[])
-    // })]
-    // public class GeyserGenericConfigPatch
-    // {
-    //     public static void Postfix(GameObject __result)
-    //     {
-    //         __result.AddOrGet<Movables.BaseMovable>().haveNeutronium = true;
-    //     }
-    // }
 
     [HarmonyPatch(typeof(Assets), nameof(Assets.AddBuildingDef))]
     public class AssetsAddBuildingDefPatch
@@ -54,7 +38,10 @@ namespace MovableFeatures
             var movable = def.BuildingComplete.gameObject.AddOrGet<BaseMovable>();
             var context = PatchRegistry.BuildingMovableContexts[def.BuildingComplete.gameObject.PrefabID()];
             movable.flag = context.Flags;
+#if DEBUG
             CLog.Info($"组件添加至建筑 {def.BuildingComplete.gameObject.PrefabID()}");
+#endif
+
         }
     }
 
@@ -67,8 +54,10 @@ namespace MovableFeatures
             {
                 var movable = __result.AddOrGet<BaseMovable>();
                 var context = PatchRegistry.EntityMovableContexts[__result.PrefabID()];
-                movable.flag = context.Flags; 
+                movable.flag = context.Flags;
+#if DEBUG
                 CLog.Info($"组件已添加至 {__result.PrefabID()}");
+#endif
                 return;
             }
 

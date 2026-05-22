@@ -9,9 +9,9 @@ namespace MovableFeatures
         
         BannedCrossPlantMove = 1 << 0,
         HaveNeutronium = 1 << 1,
-        IsWarpConduit  = 1 << 2,
+        WarpConduit  = 1 << 2 | BannedCrossPlantMove | JustCreateNew,
         LonelyMinion = 1 << 3,
-        
-        WarpConduit = BannedCrossPlantMove | IsWarpConduit
+        JustCreateNew = 1 << 4,
+        SapTree = 1 << 5 | JustCreateNew,
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using MovableFeatures.Movables;
 using CLog = GlobalUtil.Logger;
 using Object = UnityEngine.Object;
 
@@ -19,6 +18,7 @@ namespace MovableFeatures
             {
                 MoveExistsPipeline(context);
             }
+
             ReActiveObject(context);
             MoveNeutronium(context);
         }
@@ -39,19 +39,21 @@ namespace MovableFeatures
             newGo.SetActive(true);
             context.Movable.gameObject.SetActive(false);
             context.Movable.gameObject.DeleteObject();
-
         }
 
         private static void MoveExistsPipeline(MoveMomentContext context)
         {
             SetBuildingDefCanMove(context);
             DeregisterComponents(context);
-            // RemoveWarpConduitSenderPorts(context);
             SetTransformPosition(context);
             RegisterComponents(context);
             RefreshMeter(context);
-            // RefreshWarpConduitStatues(context);
-            // AddWarpConduitPorts(context);
+            RefreshRadiationEmitter(context);
+            MoveLonelyMinionHouse(context);
+            if (context.Movable.flag.HasFlag(MovableFlags.IsGravitasCreatureManipulator))
+            {
+                GravitasCreatureManipulatorMove.Execute(context);
+            }
         }
 
         private static void GetLayer(MoveMomentContext context)
@@ -180,9 +182,7 @@ namespace MovableFeatures
 
         private static void RegisterComponents(MoveMomentContext context)
         {
-
             var go = context.Movable.gameObject;
-            CLog.Info($"{go.GetProperName()}--{go.GetComponent<OccupyArea>() != null}");
             var cell = Grid.PosToCell(go);
             var building = go.GetComponent<Building>();
             if (building != null)
@@ -201,7 +201,6 @@ namespace MovableFeatures
                 {
                     go.GetComponent<OccupyArea>().UpdateOccupiedArea();
                 }
-
             }
 
             go.GetComponent<KSelectable>().IsSelectable = true;
@@ -232,6 +231,7 @@ namespace MovableFeatures
                     manualDeliveryKg.Pause(false, "move over");
                 }
             }
+
             foreach (var buildingConduitEndpoints in go.GetComponents<BuildingConduitEndpoints>())
                 buildingConduitEndpoints.AddEndpoint();
             var workable = go.GetComponent<Workable>();
@@ -249,11 +249,43 @@ namespace MovableFeatures
             partialLightBlocking.SetLightBlocking();
         }
 
+        private static void RefreshRadiationEmitter(MoveMomentContext context)
+        {
+            if (!context.Movable.flag.HasFlag(MovableFlags.HaveRadiationEmitter)) return;
+            var radiationEmitter = context.Movable.gameObject.GetComponent<RadiationEmitter>();
+            if (radiationEmitter != null) radiationEmitter.Refresh();
+        }
+
         private static void RefreshMeter(MoveMomentContext context)
         {
             var kBatchedAnimController = context.Movable.gameObject.GetComponent<KBatchedAnimController>();
             if (kBatchedAnimController == null) return;
             kBatchedAnimController.Play(kBatchedAnimController.GetCurrentAnim().name, kBatchedAnimController.GetMode());
+        }
+
+        private static void MoveLonelyMinionHouse(MoveMomentContext context)
+        {
+            if (!context.Movable.flag.HasFlag(MovableFlags.LonelyMinionMailbox)) return;
+            var house = context.Movable.gameObject.GetComponent<LonelyMinionMailbox>().House;
+            if (house == null)
+            {
+                CLog.Warning("Missing Lonely Minion House");
+                return;
+            }
+
+            var movable = house.GetComponent<BaseMovable>();
+            if (movable == null)
+            {
+                CLog.Warning("Lonely Minion House BaseMovable");
+                return;
+            }
+
+            var houseCell = Grid.OffsetCell(context.TargetCell, new CellOffset(3, 0));
+            Move(new MoveMomentContext
+            {
+                Movable = movable,
+                TargetCell = houseCell,
+            });
         }
 
         private static void SetBuildingDefCanMove(MoveMomentContext context)

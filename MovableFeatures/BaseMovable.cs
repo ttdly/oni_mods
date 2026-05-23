@@ -3,7 +3,7 @@ using STRINGS;
 using UnityEngine;
 using CLog = GlobalUtil.Logger;
 
-namespace MovableFeatures.Movables
+namespace MovableFeatures
 {
     public class BaseMovable : KMonoBehaviour
     {
@@ -15,8 +15,9 @@ namespace MovableFeatures.Movables
         
         public void OnRefreshUserMenu(object _)
         {
-            if (gameObject.HasTag("OilWell") &&
-                gameObject.GetComponent<BuildingAttachPoint>()?.points[0].attachedBuilding != null) return;
+            if (gameObject.HasTag("OilWell")
+                && gameObject.GetComponent<BuildingAttachPoint>()?.points[0].attachedBuilding != null) return;
+            if (flag.HasFlag(MovableFlags.LonelyMinionHouse)) return;
 
             Game.Instance.userMenu.AddButton(
                 gameObject,

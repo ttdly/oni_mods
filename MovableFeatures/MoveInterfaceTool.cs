@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using HarmonyLib;
-using MovableFeatures.Movables;
 using UnityEngine;
 
 namespace MovableFeatures
@@ -105,14 +104,12 @@ namespace MovableFeatures
             var visualAnimController = visualBuffer.AddOrGet<KBatchedAnimController>();
             var gameObjectController = _targetMovable.gameObject.GetComponent<KBatchedAnimController>();
             visualAnimController.AnimFiles = gameObjectController.AnimFiles;
-            visualAnimController.initialAnim = gameObjectController.initialAnim;
+            visualAnimController.initialAnim = gameObjectController.GetCurrentAnim().name;
             var needOffset = _targetMovable.gameObject.TryGetComponent(out KBoxCollider2D kBoxCollider2D) &&
                              kBoxCollider2D.size.x % 2 == 0;
             return (visualBuffer, needOffset);
         }
 
-        // 未改变敲蛋桌文本
-        // 添加工具栏工具
         [HarmonyPatch(typeof(PlayerController), "OnPrefabInit")]
         public static class PlayerControllerOnPrefabInitPatch
         {

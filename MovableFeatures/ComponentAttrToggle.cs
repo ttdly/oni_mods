@@ -7,14 +7,10 @@ namespace MovableFeatures
 {
     public class ComponentAttrToggle
     {
-        private static readonly FieldInfo LoreBareUsed =
-            AccessTools.Field(typeof(LoreBearer), "BeenClicked");
-        private static readonly FieldInfo SetLockerUsed =
-            AccessTools.Field(typeof(SetLocker), "used");
-        private static readonly FieldInfo Activated =
-            AccessTools.Field(typeof(Activatable), "activated");
-        private static readonly MethodInfo UpdateFlag =
-            AccessTools.Method(typeof(Activatable), "UpdateFlag");
+        private static readonly FieldInfo LoreBareUsed = AccessTools.Field(typeof(LoreBearer), "BeenClicked");
+        private static readonly FieldInfo SetLockerUsed = AccessTools.Field(typeof(SetLocker), "used");
+        private static readonly FieldInfo Activated = AccessTools.Field(typeof(Activatable), "activated");
+        private static readonly MethodInfo UpdateFlag = AccessTools.Method(typeof(Activatable), "UpdateFlag");
 
 
         public static void ToggleLoreBearer(GameObject origin, GameObject cloned) {

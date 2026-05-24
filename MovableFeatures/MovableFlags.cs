@@ -16,5 +16,6 @@ namespace MovableFeatures
         HaveRadiationEmitter = 1 << 6,
         LonelyMinionMailbox = 1 << 7,
         IsGravitasCreatureManipulator = 1 << 8,
+        IsGeyser =  1 << 9 | HaveNeutronium,
     }
 }

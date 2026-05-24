@@ -1,5 +1,9 @@
-﻿using HarmonyLib;
+﻿using System.Collections;
+using System.IO;
+using GlobalUtil.UI;
+using HarmonyLib;
 using KMod;
+using MovableFeatures.Screen;
 using UnityEngine;
 using CLog = GlobalUtil.Logger;
 
@@ -8,6 +12,8 @@ namespace MovableFeatures
     public class Mod : UserMod2
     {
         public static Harmony HarmonyInstance;
+        public static GameObject SettingScreenPrefab;
+        public static string ConfigPath;
 
         public override void OnLoad(Harmony harmony)
         {
@@ -16,6 +22,9 @@ namespace MovableFeatures
             CLog.Init("【位移信标|MovableFeatures】");
             CreateTranslationTemplate();
             PatchRegistry.RegisterPatches();
+            LoadAssets();
+            ConfigPath = Path.Combine(Manager.GetDirectory(), "movable_features_config.json");
+            Settings.Load();
         }
 
         private static void CreateTranslationTemplate()
@@ -25,7 +34,17 @@ namespace MovableFeatures
             ModUtil.RegisterForTranslation(typeof(Text));
 #endif
         }
+
+        private static void LoadAssets() {
+            var bundle = GlobalUtil.UI.Util.LoadAssetBundle("movable_features", platformSpecific: true);
+            var prefab = bundle.LoadAsset<GameObject>("Assets/UIs/MovableFeaturesSettings.prefab");
+            SettingScreenPrefab = prefab;
+
+            var tmPConverter = new TMPConverter();
+            tmPConverter.ReplaceAllText(prefab);
+        }
     }
+
 
 
     [HarmonyPatch(typeof(Assets), nameof(Assets.AddBuildingDef))]
@@ -62,10 +81,44 @@ namespace MovableFeatures
 
             if (__result.HasTag(GameTags.GeyserFeature))
             {
-                __result.AddOrGet<BaseMovable>().flag = MovableFlags.HaveNeutronium;
+                __result.AddOrGet<BaseMovable>().flag = MovableFlags.IsGeyser;
                 return;
             }
             if (__result.HasTag(GameTags.Gravitas)) __result.AddOrGet<BaseMovable>();
         }
     }
+
+    [HarmonyPatch(typeof(ModsScreen), "BuildDisplay")]
+    public class ModsScreenBuildDisplayPatch
+    {
+        private static void Postfix(ModsScreen __instance, object ___displayedMods)
+        {
+            var mods = Global.Instance.modManager.mods;
+
+            foreach (var entry in (IEnumerable)___displayedMods)
+            {
+                var index = Traverse.Create(entry).Field<int>("mod_index").Value;
+                var mod = mods[index];
+                if (mod.staticID != "CalYu.MovableFeatures") continue;
+
+                var transform = Traverse.Create(entry).Field<RectTransform>("rect_transform").Value;
+                if (transform.TryGetComponent(out HierarchyReferences references))
+                {
+                    var button = references.GetReference<KButton>("ManageButton").transform;
+                    var settingButton = Util.KInstantiateUI<KButton>(button.gameObject, button.parent.gameObject, true);
+                    settingButton.transform.SetSiblingIndex(button.transform.GetSiblingIndex() - 1);
+                    settingButton.GetComponentInChildren<LocText>().text = Strings.Get("STRINGS.UI.SCHEDULESCREEN.SETTINGS");
+                    settingButton.onClick += ShowDialog;
+                }
+                break;
+            }
+        }
+
+        private static void ShowDialog()
+        {
+            Settings.Load();
+            DialogCreator.CreateFDialog<SettingScreen>(Mod.SettingScreenPrefab, "MFSetting");
+        }
+    }
+
 }

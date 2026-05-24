@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using HarmonyLib;
 using CLog = GlobalUtil.Logger;
 using Object = UnityEngine.Object;
 
@@ -7,10 +9,15 @@ namespace MovableFeatures
 {
     public class MovePipeline
     {
+        private static FieldInfo _geyserStudied;
         public static void Move(MoveMomentContext context)
         {
+            var flag = context.Movable.flag;
+            var justCreate = (flag & MovableFlags.JustCreateNew) != 0;
+            var isGeyser = (flag & MovableFlags.IsGeyser) != 0;
+
             GetLayer(context);
-            if (context.Movable.flag.HasFlag(MovableFlags.JustCreateNew))
+            if (justCreate)
             {
                 CreateNewPipeline(context);
             }
@@ -25,20 +32,20 @@ namespace MovableFeatures
 
         private static void CreateNewPipeline(MoveMomentContext context)
         {
+            var olgGo = context.Movable.gameObject;
             var newGo =
-                GameUtil.KInstantiate(context.Movable.gameObject,
+                GameUtil.KInstantiate(olgGo,
                     Grid.CellToPosCBC(context.TargetCell, context.TargetLayer), context.TargetLayer);
-            var loreBearer = context.Movable.gameObject.GetComponent<LoreBearer>();
+            var loreBearer = olgGo.GetComponent<LoreBearer>();
             if (loreBearer != null) ComponentAttrToggle.ToggleLoreBearer(loreBearer, newGo.AddOrGet<LoreBearer>());
-            var setLocker = context.Movable.gameObject.GetComponent<SetLocker>();
+            var setLocker = olgGo.GetComponent<SetLocker>();
             if (setLocker != null) ComponentAttrToggle.ToggleSetLocker(setLocker, newGo.AddOrGet<SetLocker>());
-            var activatable = context.Movable.gameObject.GetComponent<Activatable>();
+            var activatable = olgGo.GetComponent<Activatable>();
             if (activatable != null) ComponentAttrToggle.ToggleActivated(activatable, newGo.AddOrGet<Activatable>());
-            // RefreshWarpConduitStatues(context);
             newGo.SetActive(false);
             newGo.SetActive(true);
-            context.Movable.gameObject.SetActive(false);
-            context.Movable.gameObject.DeleteObject();
+            olgGo.SetActive(false);
+            olgGo.DeleteObject();
         }
 
         private static void MoveExistsPipeline(MoveMomentContext context)
@@ -50,6 +57,7 @@ namespace MovableFeatures
             RefreshMeter(context);
             RefreshRadiationEmitter(context);
             MoveLonelyMinionHouse(context);
+            RefreshGeyser(context);
             if (context.Movable.flag.HasFlag(MovableFlags.IsGravitasCreatureManipulator))
             {
                 GravitasCreatureManipulatorMove.Execute(context);
@@ -98,6 +106,7 @@ namespace MovableFeatures
                 var cell = Grid.OffsetCell(context.Movable.originCell, offset, -1);
                 if (!(Grid.Element.Length < cell || Grid.Element[cell] == null || !IsMoveNeutronium(cell)))
                     SimMessages.ReplaceElement(cell, SimHashes.Vacuum, CellEventLogger.Instance.DebugTool, 0);
+                if (!Settings.GenerateUnobtanium) continue;
                 cell = Grid.OffsetCell(context.TargetCell, offset, -1);
                 if (Grid.IsValidCell(cell))
                     SimMessages.ReplaceElement(cell, SimHashes.Unobtanium, CellEventLogger.Instance.DebugTool,
@@ -294,6 +303,36 @@ namespace MovableFeatures
             var buildingDef = go.GetComponent<Building>();
             if (buildingDef != null)
                 buildingDef.Def.CanMove = true;
+        }
+
+        private static void RefreshGeyser(MoveMomentContext context)
+        {
+            CLog.Info("当前状态", Settings.ToggleGeyserAttribute, context.Movable.gameObject.GetProperName(), context.Movable.flag);
+            if (Settings.ToggleGeyserAttribute ||
+                (context.Movable.flag & MovableFlags.IsGeyser) != MovableFlags.IsGeyser) return;
+            CLog.Info("执行至此");
+            var old =  context.Movable.gameObject;
+            var newGo = Util.KInstantiate(Assets.GetPrefab(old.PrefabID()));
+            if (old.TryGetComponent(out Studyable studyable))
+            {
+                if (studyable.Studied)
+                {
+                    if (_geyserStudied == null)
+                    {
+                        _geyserStudied = AccessTools.Field(typeof(Studyable), "studied");
+                    }
+
+                    if (newGo.TryGetComponent(out Studyable newStudyable))
+                    {
+                        _geyserStudied?.SetValue(newStudyable, true);
+                    }
+                }
+            }
+            newGo.transform.SetPosition(old.transform.GetPosition());
+            newGo.SetActive(true);
+            old.SetActive(false);
+            old.DeleteObject();
+
         }
 
         public class MoveMomentContext

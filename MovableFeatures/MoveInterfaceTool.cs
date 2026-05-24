@@ -24,7 +24,7 @@ namespace MovableFeatures
             if (_targetMovable.CanMoveTo(mouseCell))
             {
                 PlaySound(GlobalAssets.GetSound("HUD_Click"));
-                if (Settings.StableMode())
+                if (Settings.StableMode)
                     _targetMovable.StableMove(mouseCell);
                 else
                     _targetMovable.Move(mouseCell);

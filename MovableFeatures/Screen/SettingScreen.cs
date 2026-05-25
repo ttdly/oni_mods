@@ -17,6 +17,7 @@ namespace MovableFeatures.Screen
             transform.Find("Container/Head/Title").GetComponent<LocText>().text =
                 Strings.Get("STRINGS.UI.SCHEDULESCREEN.SETTINGS");
             transform.Find("Container/Head/Close").GetComponent<Button>().onClick.AddListener(OnClickCancel);
+            transform.Find("Container/Head/Close/Image").GetComponent<Image>().sprite = Assets.GetSprite("cancel");
             var setting1 = transform.Find("Container/Content/Setting1");
             _generateUnobtanium = setting1.GetComponent<Toggle>();
             setting1.Find("Label").GetComponent<LocText>().text = Text.GenerateUnobtanium;

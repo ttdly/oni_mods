@@ -1,0 +1,34 @@
+﻿Machine translation version
+
+[h1]Mod Introduction[/h1]
+[b]All Versions[/b]
+This mod adds a "Move to" button to the info bar of some immovable objects in the game. Press this button, select a location, and the selected object will instantly move to the position chosen by the tool.
+
+Please Note:
+1.If a moved object acts weirdly, just reload your save.
+2.Known Issue: Moving objects while paused right after loading frequently causes crashes that are hard to reproduce.
+3.To move the Hermit’s Shack (Solemn Tech Shipping Container), you must move its paired mailbox.
+
+[h1]Having Problems with the Mod?[/h1]
+[olist]
+[*]Check if your local mod version matches the version number in the "Current Version". If it doesn't match, please update this mod.
+[*]Copy the error message or the "Player.log" file. Submit the error message in the comments section (it's best to start a new discussion) or submit a new issue in my [url=https://github.com/ttdly/ONI-Mods/issues]code repository[/url], and I will address it when I see it.
+[/olist]
+
+[h1]Statement: [/h1]
+[list]
+[*]I will not respond if the mod crashes without providing any valid error messages.
+[*]If my mod goes without updates for a long time in the future, you may use my source code to release bugfix versions, provided that you open-source them under the repository's license.
+[*]Also, thanks to [url=https://steamcommunity.com/profiles/76561198431638450]@吐泡泡的小鱼[/url], [url=https://github.com/Sgt-Imalas]@Sgt_Imalas[/url], and [url=https://github.com/peterhaneve]@Peter Han[/url] for their help when I was learning and creating the mod.
+[/list]
+
+Russian Translation Contributor: [url=https://github.com/DarkEviL88]@DarkEviL88[/url]
+Korean translation contributor: [url=https://github.com/Nubula01]@Nubula[/url]
+
+[h1]Current Version[/h1]
+2.2.0
+
+[b]Keywords:[/b] Move Geysers, Move POI props
+
+[h1]Movable items[/h1]
+Mini-Pod, Ancient Specimen, Pajama Cubby, Critter Flux-O-Matic, LED Light, Printing Pod, Printerceptor, Gravitas Shipping Container, Mailbox, Anti Entropy Thermo-Nullifier, Somnium Synthesizer, Biobot Builder, Security Door, Showroom Doors, Security Door, Temporal Tear Opener, Supply Teleporter Output, Supply Teleporter Input, Wood Pile, Ladder, Trash Can, Toilet Paper Holder, Dead Plant, Wall Chart, Wall Chart, Paper Towel Dispenser, Mini Fridge, Flip Phone, Biophysics Research Desk, Clock, Light Fixture, Enamel Sink, Mirror, Geo Vent, Geothermal Heat Pump, Neural Vacillator, Petrified Fossil, Amber Fossil, Frozen Fossil, Fossil Fragments, Fossil Fragments, Light Fixture, Tool Rack, Tool Crate, Shelf, Robotics Research Desk, Lab Desk, Sample Jar, Big Brain Jar, Hand Scanner, Robotic Arm, First Aid Kit, Broken Fire Extinguisher, Reception Desk, Electronic Display, Computer Podium, Computer Podium, Window, Anatomy Poster, Ceiling Robot, Doctorate Degree, Coffee Table, Gravitas Monument, Landscape Portrait, Light Fixture, Filing Cabinet, Electronic Display, Computer Podium, Model Skeleton, Crashed Satellite, Wrecked Satellite, Teleporter Receiver, Teleporter Transmitter, Vending Machine, Locker, Murphy Bed, Showroom Couch, Showroom Chair, Wall Cabinet, Prefab Shelf, Long Prefab Shelf, Off-site Locker, Research Portal, Research Portal, Research Portal, Explosives Locker, Cryotank 3000, Office Plant, Table, Crushed Satellite, Electronic Display, Electronic Display, Director's Desk, Lobby Couch, Lumen Quartz, Chandelier, Lobby Chair, Lobby Chair, Broken Elevator, Clothing Rack, Service Cart, Electronic Display, Computer Desk, Coat Rack, Clock, Acoustic Art Panel, Travel Poster, Travel Poster, Cool Steam Vent, Steam Vent, Water Geyser, Cool Slush Geyser, Polluted Water Vent, Cool Salt Slush Geyser, Salt Water Geyser, Minor Volcano, Volcano, Carbon Dioxide Geyser, Carbon Dioxide Vent, Hydrogen Vent, Hot Polluted Oxygen Vent, Infectious Polluted Oxygen Vent, Chlorine Gas Vent, Cool Chlorine Gas Vent, Natural Gas Geyser, Copper Volcano, Iron Volcano, Gold Volcano, Aluminum Volcano, Tungsten Volcano, Niobium Volcano, Cobalt Volcano, Leaky Oil Fissure, Liquid Sulfur Geyser, Polluted Brine Vent, Interior Hatch, Oil Reservoir, Experiment 52B, Tidal Spring, Niobium Volcano, Thermal Gas Fissure, Beeta Hive

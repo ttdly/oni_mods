@@ -14,7 +14,6 @@ namespace MovableFeatures
         {
             var flag = context.Movable.flag;
             var justCreate = (flag & MovableFlags.JustCreateNew) != 0;
-            var isGeyser = (flag & MovableFlags.IsGeyser) != 0;
 
             GetLayer(context);
             if (justCreate)
@@ -81,7 +80,9 @@ namespace MovableFeatures
         {
             if (!context.HaveNeutronium) return;
             var offsets = new[] { 0 };
-            if (context.Movable.gameObject.HasTag(GameTags.GeyserFeature))
+            var go = context.Movable.gameObject;
+            var flag = context.Movable.flag;
+            if (flag == MovableFlags.IsGeyser)
             {
                 var buffer = new HashSet<int>();
                 for (var i = 0; i < 3; i++)
@@ -94,12 +95,14 @@ namespace MovableFeatures
 
                 offsets = buffer.ToArray();
             }
-
-            if (context.Movable.gameObject.PrefabID() == new Tag(GeothermalControllerConfig.ID))
+            else if (flag == MovableFlags.IsGeothermalController)
+            {
                 offsets = new[] { -4, -3, -2, -1, 0, 1, 2, 3, 4 };
-
-            if (context.Movable.gameObject.PrefabID() == new Tag(GeothermalVentConfig.ID))
+            }
+            else if (flag == MovableFlags.IsGeothermalVent)
+            {
                 offsets = new[] { -1, 0, 1 };
+            }
 
             foreach (var offset in offsets)
             {
@@ -307,10 +310,8 @@ namespace MovableFeatures
 
         private static void RefreshGeyser(MoveMomentContext context)
         {
-            CLog.Info("当前状态", Settings.ToggleGeyserAttribute, context.Movable.gameObject.GetProperName(), context.Movable.flag);
             if (Settings.ToggleGeyserAttribute ||
                 (context.Movable.flag & MovableFlags.IsGeyser) != MovableFlags.IsGeyser) return;
-            CLog.Info("执行至此");
             var old =  context.Movable.gameObject;
             var newGo = Util.KInstantiate(Assets.GetPrefab(old.PrefabID()));
             if (old.TryGetComponent(out Studyable studyable))

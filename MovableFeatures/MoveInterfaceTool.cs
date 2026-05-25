@@ -57,9 +57,11 @@ namespace MovableFeatures
                 var offset = animController.Offset;
                 offset.x += 0.5f;
                 animController.Offset = offset;
+                animController.PlayMode = KAnim.PlayMode.Paused;
             }
 
             visualizer.SetActive(true);
+            if (animController != null) animController.TriggerStop();
             // 显示鼠标周围的网格效果
             GridCompositor.Instance.ToggleMajor(true);
         }

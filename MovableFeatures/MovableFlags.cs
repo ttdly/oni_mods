@@ -17,5 +17,7 @@ namespace MovableFeatures
         LonelyMinionMailbox = 1 << 7,
         IsGravitasCreatureManipulator = 1 << 8,
         IsGeyser =  1 << 9 | HaveNeutronium,
+        IsGeothermalController =  1 << 10 | HaveNeutronium,
+        IsGeothermalVent =  1 << 11 | HaveNeutronium,
     }
 }

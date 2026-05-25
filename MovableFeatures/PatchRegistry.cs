@@ -26,7 +26,7 @@ namespace MovableFeatures
                 Flags = flags
             };
             BuildingMovableContexts.Add(new Tag(prefabId), patchContext);
-#if DEBUG
+#if DEBUG && false
             CLog.Info($"已注册 {typeof(TPatchType)}");
 #endif
         }
@@ -42,7 +42,7 @@ namespace MovableFeatures
                 Flags = flags
             };
             EntityMovableContexts.Add(new Tag(prefabId), patchContext);
-#if DEBUG
+#if DEBUG && false
             CLog.Info($"已注册 {typeof(TPatchType)}");
 #endif
         }
@@ -82,9 +82,9 @@ namespace MovableFeatures
             // 接收器
             RegisterEntity<WarpReceiverConfig>(WarpReceiverConfig.ID, BannedCrossPlantMove);
             // 地热排气孔
-            RegisterEntity<GeothermalVentConfig>(GeothermalVentConfig.ID, HaveNeutronium);
+            RegisterEntity<GeothermalVentConfig>(GeothermalVentConfig.ID, IsGeothermalVent);
             // 地热热泵
-            RegisterBuilding<GeothermalControllerConfig>(GeothermalControllerConfig.ID, HaveNeutronium);
+            RegisterEntity<GeothermalControllerConfig>(GeothermalControllerConfig.ID, IsGeothermalController);
             // 坠毁卫星1
             RegisterEntity<PropSurfaceSatellite1Config>(PropSurfaceSatellite1Config.ID);
             // 坠毁卫星2
@@ -109,6 +109,12 @@ namespace MovableFeatures
             RegisterBuilding<MorbRoverMakerConfig>(MorbRoverMakerConfig.ID);
             // 打印截能仪器
             RegisterBuilding<HijackedHeadquartersConfig>(HijackedHeadquartersConfig.ID);
+            // 展厅门
+            RegisterBuilding<POIDlc2ShowroomDoorConfig>(POIDlc2ShowroomDoorConfig.ID);
+            // 安全门
+            RegisterBuilding<POIDoorInternalConfig>(POIDoorInternalConfig.ID);
+            // 安全门2
+            RegisterBuilding<POIBunkerExteriorDoor>(POIBunkerExteriorDoor.ID);
         }
 
         public class PatchContext

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyTitle>位移信标 new</AssemblyTitle>
+    <AssemblyTitle>MovableFeatures 位移信标</AssemblyTitle>
     <RootNamespace>MovableFeatures</RootNamespace>
     <Description>Now more items in fixed positions can be moved!</Description>
     <AssemblyVersion>2.2.0</AssemblyVersion>

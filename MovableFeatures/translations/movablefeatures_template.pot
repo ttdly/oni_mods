@@ -1,0 +1,45 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+
+#. MovableFeatures.Text.Desc
+msgctxt "MovableFeatures.Text.Desc"
+msgid "Now more items in fixed positions can be moved!"
+msgstr ""
+
+#. MovableFeatures.Text.GenerateUnobtanium
+msgctxt "MovableFeatures.Text.GenerateUnobtanium"
+msgid "Generate Unobtanium"
+msgstr ""
+
+#. MovableFeatures.Text.GenerateUnobtaniumDesc
+msgctxt "MovableFeatures.Text.GenerateUnobtaniumDesc"
+msgid "Whether or not does moving a geyser create Unobtanium."
+msgstr ""
+
+#. MovableFeatures.Text.Name
+msgctxt "MovableFeatures.Text.Name"
+msgid "Movable Features"
+msgstr ""
+
+#. MovableFeatures.Text.StableMode
+msgctxt "MovableFeatures.Text.StableMode"
+msgid "Stable Mode"
+msgstr ""
+
+#. MovableFeatures.Text.StableModeDesc
+msgctxt "MovableFeatures.Text.StableModeDesc"
+msgid "If enabled, the save file needs to be reloaded after moving items."
+msgstr ""
+
+#. MovableFeatures.Text.ToggleGeyserNum
+msgctxt "MovableFeatures.Text.ToggleGeyserNum"
+msgid "Toggle Geyser Num"
+msgstr ""
+
+#. MovableFeatures.Text.ToggleGeyserNumDesc
+msgctxt "MovableFeatures.Text.ToggleGeyserNumDesc"
+msgid "When moving a geyser, do not change its attributes."
+msgstr ""
+
